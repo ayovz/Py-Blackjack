@@ -1,106 +1,121 @@
 import os
 import random
 
+# Game title ASCII art
 ascii_art = """
-
 .------..------..------..------..------..------..------..------..------.
 |B.--. ||L.--. ||A.--. ||C.--. ||K.--. ||J.--. ||A.--. ||C.--. ||K.--. |
 | :(): || :/\: || (\/) || :/\: || :/\: || :(): || (\/) || :/\: || :/\: |
 | ()() || (__) || :\/: || :\/: || :\/: || ()() || :\/: || :\/: || :\/: |
 | '--'B|| '--'L|| '--'A|| '--'C|| '--'K|| '--'J|| '--'A|| '--'C|| '--'K|
 `------'`------'`------'`------'`------'`------'`------'`------'`------'
-
 """
 
 
+# Clear terminal screen (Windows/Linux/Mac)
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+# Deal one card
 def deal_card():
-    cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]
-    card = random.choice(cards)
-    return card
+    return random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11])
 
 
-def calculate_score(card_list):
-    if sum(card_list) == 21 and len(card_list) == 2:
-        return 0
-    elif 11 in card_list and sum(card_list) > 21:
-        card_list.remove(11)
-        card_list.append(1)
-    return sum(card_list)
+# Calculate score from card list
+def calculate_score(cards):
+    if sum(cards) == 21 and len(cards) == 2:
+        return 0  # Blackjack
+    if 11 in cards and sum(cards) > 21:
+        cards.remove(11)
+        cards.append(1)
+    return sum(cards)
 
 
-def compare(u_score, c_score):
-    if u_score == c_score:
+# Compare final scores
+def compare_scores(user_score, computer_score):
+    if user_score == computer_score:
         return "DRAW"
-    elif c_score == 0:
+    elif computer_score == 0:
         return "LOSS, Opponent has Blackjack!"
-    elif u_score == 0:
-        return "WIN, Player has Blackjack!"
-    elif u_score > 21:
-        return "LOSS, You went Over!"
-    elif c_score > 21:
-        return "WIN, Computer went Over!"
-    elif u_score > c_score:
-        return "You WIN"
+    elif user_score == 0:
+        return "WIN, You have Blackjack!"
+    elif user_score > 21:
+        return "LOSS, You went over!"
+    elif computer_score > 21:
+        return "WIN, Computer went over!"
+    elif user_score > computer_score:
+        return "WIN, You beat the computer!"
     else:
-        return "You LOSE"
+        return "LOSS, Computer wins!"
 
 
-def game_status(choice):
-    if choice == "Y" or choice == "y":
-        os.system("cls")
-        return True
-    elif choice == "N" or choice == "n":
-        print("Thanks for playing Blackjack!")
-        return False
-    else:
-        os.system("cls")
-        return False
+# Ask to play again
+def ask_replay():
+    while True:
+        choice = input("Would you like to play again? (y/n): ").lower()
+        if choice == 'y':
+            clear_screen()
+            return True
+        elif choice == 'n':
+            print("Thanks for playing Blackjack! 👋")
+            return False
+        else:
+            print("Please enter 'y' or 'n'.")
 
 
-replay = True
-
-while replay:
+# Main game loop
+def play_game():
+    clear_screen()
     print(ascii_art)
-    user_cards = []
-    computer_cards = []
-    computer_score = -1
-    user_score = -1
-    isGameOver = False
 
-    for _ in range(2):
-        user_cards.append(deal_card())
-        computer_cards.append(deal_card())
+    user_cards = [deal_card(), deal_card()]
+    computer_cards = [deal_card(), deal_card()]
+    game_over = False
 
-    while not isGameOver:
+    while not game_over:
         user_score = calculate_score(user_cards)
         computer_score = calculate_score(computer_cards)
-        print(f'Your cards: {user_cards}, current score: {user_score}')
 
+        print(f"\nYour cards: {user_cards}, current score: {user_score}")
         if user_score > 21:
-            print(f"Computer's Cards: {computer_cards} Computer's score: {computer_score}")
+            print(f"Computer's cards: {computer_cards}, score: {computer_score}")
         else:
-            print(f'Computer\'s First Card: {computer_cards[0]}')
+            print(f"Computer's first card: {computer_cards[0]}")
 
         if user_score == 0 or computer_score == 0 or user_score > 21:
-            isGameOver = True
+            game_over = True
         else:
-            user_deal = input("Type 'y' to get another card, type 'n' to stand: ")
-            if user_deal == 'y':
+            user_choice = input("Type 'y' to draw another card, or 'n' to stand: ").lower()
+            if user_choice == 'y':
                 user_cards.append(deal_card())
+            elif user_choice == 'n':
+                game_over = True
             else:
-                isGameOver = True
+                print("Invalid input. Please type 'y' or 'n'.")
 
-    while computer_cards != 0 and computer_score < 17:
+    # Computer's turn
+    while calculate_score(computer_cards) < 17 and computer_score != 0:
         computer_cards.append(deal_card())
         computer_score = calculate_score(computer_cards)
 
-    # Final results
-    print(f'Your cards: {user_cards}, current score: {user_score}')
-    print(f"Computer's Cards: {computer_cards} Computer's score: {computer_score}")
+    user_score = calculate_score(user_cards)
+    computer_score = calculate_score(computer_cards)
 
-    print(compare(user_score, computer_score) + "\n\n")
+    print("\n--------------- Final Results ---------------")
+    print(f"Your cards: {user_cards}, final score: {user_score}")
+    print(f"Computer's cards: {computer_cards}, final score: {computer_score}")
+    print(compare_scores(user_score, computer_score))
+    print("---------------------------------------------\n")
 
-    # Ask user about replaying
-    play_again = input("Would you like to play again? (y/n): ")
 
-    replay = game_status(play_again)
+# Entry point
+print("🎉 Welcome to Blackjack! 🎉")
+input("Press Enter to start the game...")
+clear_screen()
+
+# Replay loop
+while True:
+    play_game()
+    if not ask_replay():
+        break
